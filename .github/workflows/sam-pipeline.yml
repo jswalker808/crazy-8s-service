@@ -18,4 +18,4 @@ jobs:
           aws-region: us-west-1
       # sam build 
       - run: sam build --use-container
-      - run: 
+      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name crazy-8s-service --s3-bucket crazy8sdeployments --capabilities CAPABILITY_IAM --region us-west-1 
