@@ -19,4 +19,4 @@ jobs:
       - name: Run Unit tests
         run: cd hello-world && go test ./...
       - run: sam build --use-container
-      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name crazy-8s-service --s3-bucket crazy8sdeployments --capabilities CAPABILITY_IAM --region us-west-1 
+      - run: sam deploy --stack-name crazy-8s-service --s3-bucket {{ secrets.ARTIFACT_S3_BUCKET }}
