@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -19,4 +20,6 @@ jobs:
       - name: Run Unit tests
         run: cd hello-world && go test ./...
       - run: sam build --use-container
-      - run: sam deploy --stack-name crazy-8s-service --s3-bucket $ARTIFACT_S3_BUCKET
+      - env:
+          ARTIFACT_S3_BUCKET: ${{ secrets.ARTIFACT_S3_BUCKET }}
+        run: sam deploy --stack-name crazy-8s-service --s3-bucket $ARTIFACT_S3_BUCKET
