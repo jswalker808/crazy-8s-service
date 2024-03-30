@@ -9,6 +9,16 @@ Globals:
     Timeout: 5
     MemorySize: 128
 
+Parameters:
+  TableName:
+    Type: String
+    Default: "crazy_8s_games"
+    Description: The name of the DynamoDB table to store Crazy 8's game state
+    MinLength: 3
+    MaxLength: 50
+    AllowedPattern: ^[A-Za-z_]+$
+    ConstraintDescription: "Required. Can be characters and underscore only. No numbers or special characters allowed."
+
 Resources:
   Crazy8sFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -20,9 +30,12 @@ Resources:
       Runtime: provided.al2023
       Architectures:
         - x86_64
-      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+      Environment:
         Variables:
-          PARAM1: VALUE
+          TABLE_NAME: !Ref TableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableName
 
   Crazy8sWebsocket:
     Type: AWS::ApiGatewayV2::Api
@@ -93,6 +106,20 @@ Resources:
       Description: Prod Stage
       DeploymentId: !Ref Deployment
       ApiId: !Ref Crazy8sWebsocket
+
+  Crazy8sGamesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "gameId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "gameId"
+          KeyType: "HASH"
+      SSESpecification:
+        SSEEnabled: True
+      TableName: !Ref TableName
   
 
 Outputs:
@@ -105,3 +132,6 @@ Outputs:
   Crazy8sFunctionIAMRole:
     Description: "Implicit IAM Role created for function"
     Value: !GetAtt Crazy8sFunctionRole.Arn
+  Crazy8sGamesTableArn:
+    Description: "Crazy 8's game table ARN"
+    Value: !GetAtt Crazy8sGamesTable.Arn
