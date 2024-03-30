@@ -12,7 +12,7 @@ Globals:
 Parameters:
   TableName:
     Type: String
-    Default: "crazy_8s_games"
+    Default: "crazy_eights_games"
     Description: The name of the DynamoDB table to store Crazy 8's game state
     MinLength: 3
     MaxLength: 50
