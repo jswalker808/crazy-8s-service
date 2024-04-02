@@ -30,3 +30,16 @@ warm_containers = "EAGER"
 
 [default.local_start_lambda.parameters]
 warm_containers = "EAGER"
+
+[dev]
+[dev.deploy.parameters]
+stack_name = "crazy-8s-service-dev"
+s3_bucket = "crazy8sdeployments-dev"
+
+[prod]
+[prod.deploy.parameters]
+stack_name = "crazy-8s-service-prod"
+s3_bucket = "crazy8sdeployments-prod"
+
+
+

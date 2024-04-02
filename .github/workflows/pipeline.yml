@@ -20,4 +20,4 @@ jobs:
       - name: Run Unit tests
         run: cd crazy-8s && go test ./...
       - run: sam build --use-container
-      - run: sam deploy --stack-name crazy-8s-service --s3-bucket crazy8sdeployments
+      - run: sam deploy --parameter-overrides "ParameterKey=Environment,ParameterValue=prod"

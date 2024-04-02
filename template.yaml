@@ -10,6 +10,12 @@ Globals:
     MemorySize: 128
 
 Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - prod
+      - dev
   TableName:
     Type: String
     Default: "crazy_eights_games"
@@ -40,7 +46,7 @@ Resources:
   Crazy8sWebsocket:
     Type: AWS::ApiGatewayV2::Api
     Properties:
-      Name: Crazy8sWebsocket
+      Name: !Sub Crazy8sWebsocket-${Environment}
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
 
@@ -102,8 +108,8 @@ Resources:
   Stage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
-      StageName: prod
-      Description: Prod Stage
+      StageName: !Ref Environment
+      Description: !Sub ${Environment} Stage
       DeploymentId: !Ref Deployment
       ApiId: !Ref Crazy8sWebsocket
 
@@ -119,7 +125,7 @@ Resources:
           KeyType: "HASH"
       SSESpecification:
         SSEEnabled: True
-      TableName: !Ref TableName
+      TableName: !Sub ${TableName}-${Environment}
   
 
 Outputs:
@@ -127,11 +133,11 @@ Outputs:
     Description: "Websocket API endpoint for crazy 8 service"
     Value: !Join [ '', [ 'wss://', !Ref Crazy8sWebsocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage'] ]
   Crazy8sFunction:
-    Description: "First Lambda Function ARN"
+    Description: "Crazy 8's Lambda Function ARN"
     Value: !GetAtt Crazy8sFunction.Arn
   Crazy8sFunctionIAMRole:
     Description: "Implicit IAM Role created for function"
     Value: !GetAtt Crazy8sFunctionRole.Arn
   Crazy8sGamesTableArn:
-    Description: "Crazy 8's game table ARN"
+    Description: "Crazy 8's game DynamoDB table ARN"
     Value: !GetAtt Crazy8sGamesTable.Arn
