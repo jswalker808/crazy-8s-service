@@ -42,6 +42,12 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref TableName
+        - Statement:
+          - Effect: Allow
+            Action:
+              - "execute-api:ManageConnections"
+            Resource:
+              - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Crazy8sWebsocket}/*"
 
   Crazy8sWebsocket:
     Type: AWS::ApiGatewayV2::Api
@@ -49,6 +55,15 @@ Resources:
       Name: !Sub Crazy8sWebsocket-${Environment}
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
+
+  Crazy8sLambdaPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - Crazy8sWebsocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Crazy8sFunction
+      Principal: apigateway.amazonaws.com
 
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -107,11 +122,23 @@ Resources:
 
   Stage:
     Type: AWS::ApiGatewayV2::Stage
+    DependsOn:
+    - ApiCWLRoleArn
+    - ApiGatewayCloudWatchRole
     Properties:
       StageName: !Ref Environment
       Description: !Sub ${Environment} Stage
       DeploymentId: !Ref Deployment
       ApiId: !Ref Crazy8sWebsocket
+      AccessLogSettings:
+        DestinationArn: !GetAtt Crazy8sWebsocketLogGroup.Arn
+        Format: '{ "requestId": "$context.requestId", "path": "$context.path", "routeKey": "$context.routeKey", "ip": "$context.identity.sourceIp", "requestTime": "$context.requestTime", "httpMethod": "$context.httpMethod","statusCode": $context.status, "errorMessage": $context.error.messageString }'
+
+  Crazy8sWebsocketLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/crazy8swebsocket-${Environment}
+      RetentionInDays: 7
 
   Crazy8sGamesTable:
     Type: AWS::DynamoDB::Table
@@ -126,6 +153,25 @@ Resources:
       SSESpecification:
         SSEEnabled: True
       TableName: !Sub ${TableName}-${Environment}
+
+  ApiCWLRoleArn:
+    Type: AWS::ApiGateway::Account
+    Properties: 
+      CloudWatchRoleArn: !GetAtt ApiGatewayCloudWatchRole.Arn
+
+  ApiGatewayCloudWatchRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Path: /
+        ManagedPolicyArns:
+          - 'arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs'
   
 
 Outputs:

@@ -13,17 +13,8 @@ parallel = true
 [default.validate.parameters]
 lint = true
 
-[default.deploy.parameters]
-capabilities = "CAPABILITY_IAM"
-confirm_changeset = false
-fail_on_empty_changeset=false
-region = "us-west-1"
-
 [default.package.parameters]
 resolve_s3 = true
-
-[default.sync.parameters]
-watch = true
 
 [default.local_start_api.parameters]
 warm_containers = "EAGER"
@@ -39,6 +30,10 @@ capabilities = "CAPABILITY_IAM"
 confirm_changeset = false
 fail_on_empty_changeset=false
 region = "us-west-1"
+
+[dev.sync.parameters]
+watch = true
+stack_name = "crazy-8s-service-dev"
 
 [prod]
 [prod.deploy.parameters]

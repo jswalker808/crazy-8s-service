@@ -1,26 +1,33 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	var greeting string
-	sourceIP := request.RequestContext.Identity.SourceIP
+func handler(request events.APIGatewayWebsocketProxyRequest) (interface{}, error) {
 
-	if sourceIP == "" {
-		greeting = "Hello, world!\n"
-	} else {
-		greeting = fmt.Sprintf("Hello, %s!\n", sourceIP)
+	log.Println("In the handler func")
+
+	switch routeKey := request.RequestContext.RouteKey; routeKey {
+		case "$connect": 
+			return events.APIGatewayProxyResponse{
+				StatusCode: 200,
+				Body: "Successfully connected",
+			}, nil
+		case "$disconnect":
+			return events.APIGatewayProxyResponse{
+				StatusCode: 200,
+				Body: "Successfully disconnected",
+			}, nil
+		default:
+			return events.APIGatewayProxyResponse{
+				StatusCode: 200,
+				Body: "Play the game",
+			}, nil
 	}
-
-	return events.APIGatewayProxyResponse{
-		Body:       greeting,
-		StatusCode: 200,
-	}, nil
 }
 
 func main() {
