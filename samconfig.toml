@@ -35,11 +35,19 @@ warm_containers = "EAGER"
 [dev.deploy.parameters]
 stack_name = "crazy-8s-service-dev"
 s3_bucket = "crazy8sdeployments-dev"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+fail_on_empty_changeset=false
+region = "us-west-1"
 
 [prod]
 [prod.deploy.parameters]
 stack_name = "crazy-8s-service-prod"
 s3_bucket = "crazy8sdeployments-prod"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+fail_on_empty_changeset=false
+region = "us-west-1"
 
 
 
