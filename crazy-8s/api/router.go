@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crazy-8s/service"
 	"crazy-8s/transport"
 	"fmt"
@@ -16,21 +17,21 @@ func NewRouter(gameService *service.GameService) *Router {
 	}
 }
 
-func (router *Router) HandleRequest(action string, request transport.Request) error {
+func (router *Router) HandleRequest(ctx context.Context, action string, request transport.Request) error {
 	switch action {
 		case "create_game":
-			return router.handleCreateGame(request)
+			return router.handleCreateGame(ctx, request)
 		default:
 			return fmt.Errorf("unsupported game action: %v", action)
 	}
 }
 
-func (router *Router) handleCreateGame(request transport.Request) error {
+func (router *Router) handleCreateGame(ctx context.Context, request transport.Request) error {
 	gameRequest, ok := request.(*transport.CreateGameRequest)
 	if !ok {
 		return fmt.Errorf("CreateGameRequest is required to create a new game")
 	}
-	return router.gameService.CreateGame(gameRequest)
+	return router.gameService.CreateGame(ctx.Value("connectionId").(string), gameRequest)
 }
 
 

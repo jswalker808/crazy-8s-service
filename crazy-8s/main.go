@@ -19,9 +19,11 @@ type APIGatewayResponse = events.APIGatewayProxyResponse
 
 var router *api.Router
 
-func handler(request APIGatewayRequest) (APIGatewayResponse, error) {
+func handler(ctx context.Context, request APIGatewayRequest) (APIGatewayResponse, error) {
 
-	log.Println("In the handler func")
+	log.Println("In the handler function")
+
+	ctx = context.WithValue(ctx, "connectionId", request.RequestContext.ConnectionID)
 
 	switch routeKey := request.RequestContext.RouteKey; routeKey {
 		case "$connect": 
@@ -35,11 +37,11 @@ func handler(request APIGatewayRequest) (APIGatewayResponse, error) {
 				Body: "Successfully disconnected",
 			}, nil
 		default:
-			return handleGamePlay(request)
+			return handleGamePlay(ctx, request)
 	}
 }
 
-func handleGamePlay(apiGatewayRequest APIGatewayRequest) (APIGatewayResponse, error) {
+func handleGamePlay(ctx context.Context, apiGatewayRequest APIGatewayRequest) (APIGatewayResponse, error) {
 	log.Printf("Request: %v", apiGatewayRequest.Body)
 
 	baseRequest, err := transport.NewBaseRequest(apiGatewayRequest.Body)
@@ -58,7 +60,7 @@ func handleGamePlay(apiGatewayRequest APIGatewayRequest) (APIGatewayResponse, er
 		}, err
 	}
 	
-	if err := router.HandleRequest(baseRequest.Action, gameRequest); err != nil {
+	if err := router.HandleRequest(ctx, baseRequest.Action, gameRequest); err != nil {
 		return APIGatewayResponse {
 			StatusCode: 400,
 		}, err

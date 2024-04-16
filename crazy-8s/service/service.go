@@ -17,15 +17,16 @@ func NewGameService(gameRepository *repository.GameRepository) *GameService {
 	}
 }
 
-func (service *GameService) CreateGame(request *transport.CreateGameRequest) error {
-	log.Println("In the game service")
+func (service *GameService) CreateGame(connectionId string, request *transport.CreateGameRequest) error {
+	log.Println("Creating new game")
+	log.Printf("connectionId: %v", connectionId)
 
-	createdGame, err := service.gameRepository.CreateGame(game.NewGame())
+	_, err := service.gameRepository.CreateGame(game.NewGame(connectionId))
 	if err != nil {
 		return err
 	}
 
-	log.Printf("Game was successfully created: %v", createdGame)
+	log.Printf("Game was successfully created")
 
 	return nil
 }
