@@ -1,6 +1,13 @@
 package game
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"math/rand"
+	"strings"
+)
+
+const deckSize = 52
 
 type Deck interface {
 	Draw() (*Card, error)
@@ -8,19 +15,25 @@ type Deck interface {
 }
 
 type StandardDeck struct {
-	cards []Card
+	cards []*Card
 }
 
-const maxCards = 52
-
 func NewStandardDeck() *StandardDeck {
-	cards := make([]Card, maxCards)
+	cards := make([]*Card, 0, deckSize)
 
+	for _, color := range Colors {
+		for i := 1; i < 14; i++ {
+			cards = append(cards, NewCard(color, i))
+		}
+	}
 
-
-	return &StandardDeck{
+	deck := &StandardDeck{
 		cards: cards,
 	}
+
+	deck.Shuffle()
+
+	return deck
 }
 
 func (deck *StandardDeck) Draw() (*Card, error) {
@@ -29,12 +42,22 @@ func (deck *StandardDeck) Draw() (*Card, error) {
 	}
 
 	lastIdx := len(deck.cards) - 1
-	top := &deck.cards[lastIdx:][0]
+	top := deck.cards[lastIdx:][0]
 	deck.cards = deck.cards[:len(deck.cards) - 1]
 
 	return top, nil
 }
 
 func (deck *StandardDeck) Shuffle() {
+	rand.Shuffle(len(deck.cards), func(i, j int) { deck.cards[i], deck.cards[j] = deck.cards[j], deck.cards[i]})
+}
+
+func (deck *StandardDeck) String() string {
+	var sb strings.Builder
+	for _, card := range deck.cards {
+		sb.WriteString(fmt.Sprint(card))
+		sb.WriteString(fmt.Sprint(","))
+	}
+	return fmt.Sprintf("StandardDeck[cards=%v]", sb.String())
 }
 

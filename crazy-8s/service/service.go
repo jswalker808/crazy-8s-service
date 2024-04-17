@@ -21,7 +21,7 @@ func (service *GameService) CreateGame(connectionId string, request *transport.C
 	log.Println("Creating new game")
 	log.Printf("connectionId: %v", connectionId)
 
-	_, err := service.gameRepository.CreateGame(game.NewGame(connectionId))
+	_, err := service.gameRepository.CreateGame(game.NewGame(connectionId, request.PlayerName))
 	if err != nil {
 		return err
 	}

@@ -1,11 +1,16 @@
 package game
 
+import (
+	"fmt"
+	"strings"
+)
+
 const startingHandLength = 10
 
 type Player struct {
 	id string
 	name string
-	hand []Card
+	hand []*Card
 	points int
 }
 
@@ -13,7 +18,16 @@ func NewPlayer(id string, name string) *Player {
 	return &Player{
 		id: id,
 		name: name,
-		hand: make([]Card, startingHandLength),
+		hand: make([]*Card, 0, startingHandLength),
 		points: 0,
 	}
+}
+
+func (player *Player) String() string {
+	var sb strings.Builder
+	for _, card := range player.hand {
+		sb.WriteString(fmt.Sprint(card))
+		sb.WriteString(",")
+	}
+	return fmt.Sprintf("Player[id=%v, name=%v, hand=%v, points=%v]", player.id, player.name, sb.String(), player.points)
 }

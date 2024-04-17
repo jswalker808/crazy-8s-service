@@ -2,6 +2,7 @@ package repository
 
 import (
 	gamePkg "crazy-8s/game"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
@@ -17,5 +18,6 @@ func NewGameRepository(dynamoDbClient *dynamodb.Client) *GameRepository {
 }
 
 func (repository *GameRepository) CreateGame(game *gamePkg.Game) (*gamePkg.Game, error) {
+	log.Println(game)
 	return game, nil
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"crazy-8s/global"
 	"crazy-8s/service"
 	"crazy-8s/transport"
 	"fmt"
@@ -31,7 +32,7 @@ func (router *Router) handleCreateGame(ctx context.Context, request transport.Re
 	if !ok {
 		return fmt.Errorf("CreateGameRequest is required to create a new game")
 	}
-	return router.gameService.CreateGame(ctx.Value("connectionId").(string), gameRequest)
+	return router.gameService.CreateGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
 }
 
 

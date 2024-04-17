@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crazy-8s/api"
+	"crazy-8s/global"
 	"crazy-8s/repository"
 	"crazy-8s/service"
 	"crazy-8s/transport"
@@ -23,7 +24,7 @@ func handler(ctx context.Context, request APIGatewayRequest) (APIGatewayResponse
 
 	log.Println("In the handler function")
 
-	ctx = context.WithValue(ctx, "connectionId", request.RequestContext.ConnectionID)
+	ctx = context.WithValue(ctx, global.ConnectionIdCtxKey{}, request.RequestContext.ConnectionID)
 
 	switch routeKey := request.RequestContext.RouteKey; routeKey {
 		case "$connect": 

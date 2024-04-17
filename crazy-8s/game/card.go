@@ -1,13 +1,22 @@
 package game
 
+import "fmt"
+
 type Color string
 
 const (
-	RED = iota
-	BLUE
-	GREEN
-	YELLOW
+	RED Color = "red"
+	BLUE = "blue"
+	GREEN = "green"
+	YELLOW = "yellow"
 )
+
+var Colors = []Color {
+	RED,
+	BLUE,
+	GREEN,
+	YELLOW,
+}
 
 type Card struct {
 	color Color
@@ -20,5 +29,10 @@ func NewCard(color Color, number int) *Card {
 		number: number,
 	}
 }
+
+func (card *Card) String() string {
+	return fmt.Sprintf("Card[color=%v, number=%v]", card.color, card.number)
+}
+
 
 
