@@ -12,6 +12,7 @@ const deckSize = 52
 type Deck interface {
 	Draw() (*Card, error)
 	Shuffle()
+	GetCards() []*Card 
 }
 
 type StandardDeck struct {
@@ -50,6 +51,10 @@ func (deck *StandardDeck) Draw() (*Card, error) {
 
 func (deck *StandardDeck) Shuffle() {
 	rand.Shuffle(len(deck.cards), func(i, j int) { deck.cards[i], deck.cards[j] = deck.cards[j], deck.cards[i]})
+}
+
+func (deck *StandardDeck) GetCards() []*Card {
+	return deck.cards
 }
 
 func (deck *StandardDeck) String() string {

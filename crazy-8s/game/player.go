@@ -31,3 +31,19 @@ func (player *Player) String() string {
 	}
 	return fmt.Sprintf("Player[id=%v, name=%v, hand=%v, points=%v]", player.id, player.name, sb.String(), player.points)
 }
+
+func (player *Player) GetId() string {
+	return player.id
+}
+
+func (player *Player) GetName() string {
+	return player.name
+}
+
+func (player *Player) GetHand() []*Card {
+	return player.hand
+}
+
+func (player *Player) GetPoints() int {
+	return player.points
+}

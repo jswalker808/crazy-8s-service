@@ -38,10 +38,10 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Sub ${TableName}-${Environment}
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TableName
+            TableName: !Sub ${TableName}-${Environment}
         - Statement:
           - Effect: Allow
             Action:

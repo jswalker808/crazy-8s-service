@@ -34,5 +34,13 @@ func (card *Card) String() string {
 	return fmt.Sprintf("Card[color=%v, number=%v]", card.color, card.number)
 }
 
+func (card *Card) GetColor() Color {
+	return card.color
+}
+
+func (card *Card) GetNumber() int {
+	return card.number
+}
+
 
 
