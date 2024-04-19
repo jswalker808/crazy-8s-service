@@ -59,3 +59,12 @@ func (game *Game) GetDeck() Deck {
 func (game *Game) GetDiscardPile() []*Card {
 	return game.discardPile
 }
+
+func (game *Game) GetOwner() *Player {
+	for _, player := range game.players {
+		if player.id == game.ownerId {
+			return player
+		}
+	}
+	panic("Invalid state: Unable to find owner for game")
+}

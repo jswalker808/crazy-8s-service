@@ -4,6 +4,7 @@ import (
 	"context"
 	"crazy-8s/api"
 	"crazy-8s/global"
+	"crazy-8s/notification"
 	"crazy-8s/repository"
 	"crazy-8s/service"
 	"crazy-8s/transport"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
@@ -19,6 +20,7 @@ type APIGatewayRequest = events.APIGatewayWebsocketProxyRequest
 type APIGatewayResponse = events.APIGatewayProxyResponse
 
 var router *api.Router
+var awsConfig aws.Config
 
 func handler(ctx context.Context, request APIGatewayRequest) (APIGatewayResponse, error) {
 
@@ -61,6 +63,9 @@ func handleGamePlay(ctx context.Context, apiGatewayRequest APIGatewayRequest) (A
 		}, err
 	}
 	
+	apiGatewayClient := loadApiGatewayClient(awsConfig, apiGatewayRequest.RequestContext.DomainName, apiGatewayRequest.RequestContext.Stage)
+	router.GameService().Notifier().SetClient(apiGatewayClient)
+	
 	if err := router.HandleRequest(ctx, baseRequest.Action, gameRequest); err != nil {
 		return APIGatewayResponse {
 			StatusCode: 400,
@@ -73,13 +78,16 @@ func handleGamePlay(ctx context.Context, apiGatewayRequest APIGatewayRequest) (A
 }
 
 func main() {
-	awsConfig, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-1"))
-	if err != nil {
-		log.Panic("Unable to load aws configuration")
-	}
+	awsConfig = loadAwsConfig()
+
 	dynamoDbClient := dynamodb.NewFromConfig(awsConfig)
 	gameRepository := repository.NewGameRepository(dynamoDbClient)
-	gameService := service.NewGameService(gameRepository)
+
+	apiGatewayNotifier := notification.NewApiGatewayNotifier()
+	
+	gameService := service.NewGameService(gameRepository, apiGatewayNotifier)
+	
 	router = api.NewRouter(gameService)
+
 	lambda.Start(handler)
 }

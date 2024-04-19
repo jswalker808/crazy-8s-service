@@ -35,4 +35,7 @@ func (router *Router) handleCreateGame(ctx context.Context, request transport.Re
 	return router.gameService.CreateGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
 }
 
+func (router *Router) GameService() *service.GameService {
+	return router.gameService
+}
 
