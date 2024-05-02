@@ -11,13 +11,13 @@ import (
 
 type GameService struct {
 	gameRepository *repository.GameRepository
-	notifier *notification.ApiGatewayNotifier
+	notifier       *notification.ApiGatewayNotifier
 }
 
 func NewGameService(gameRepository *repository.GameRepository, notifier *notification.ApiGatewayNotifier) *GameService {
 	return &GameService{
 		gameRepository: gameRepository,
-		notifier: notifier,
+		notifier:       notifier,
 	}
 }
 
@@ -32,10 +32,12 @@ func (service *GameService) CreateGame(connectionId string, request *transport.C
 
 	log.Printf("Game was successfully added to database")
 
-	createdGameBytes, jsonErr := json.Marshal(transport.NewCreateGameResponse(createdGame))
+	createdGameBytes, jsonErr := json.Marshal(transport.NewGameResponse(createdGame, connectionId))
 	if jsonErr != nil {
 		panic("Unable to marshal created game to JSON")
 	}
+
+	log.Println(createdGameBytes)
 
 	if notifyErr := service.notifier.Send(connectionId, createdGameBytes); notifyErr != nil {
 		return notifyErr

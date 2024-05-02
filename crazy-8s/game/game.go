@@ -8,6 +8,13 @@ import (
 
 const maxPlayers = 4
 
+type Status string
+
+const (
+	PENDING Status = "pending"
+	IN_PROGRESS = "in_progress"
+)
+
 type Game struct {
 	id string
 	ownerId string
@@ -15,6 +22,8 @@ type Game struct {
 	players []*Player
 	deck Deck
 	discardPile []*Card
+	status Status
+	currentTurn string
 }
 
 func NewGame(ownerId string, ownerName string) *Game {
@@ -29,6 +38,8 @@ func NewGame(ownerId string, ownerName string) *Game {
 		players: players,
 		deck: NewStandardDeck(),
 		discardPile: make([]*Card, 0),
+		status: PENDING,
+		currentTurn: "",
 	}
 }
 
@@ -60,6 +71,14 @@ func (game *Game) GetDiscardPile() []*Card {
 	return game.discardPile
 }
 
+func (game *Game) GetStatus() Status {
+	return game.status
+}
+
+func (game *Game) GetCurrentTurn() string {
+	return game.currentTurn
+}
+
 func (game *Game) GetOwner() *Player {
 	for _, player := range game.players {
 		if player.id == game.ownerId {
@@ -67,4 +86,23 @@ func (game *Game) GetOwner() *Player {
 		}
 	}
 	panic("Invalid state: Unable to find owner for game")
+}
+
+func (game *Game) GetPlayer(id string) *Player {
+	for _, player := range game.players {
+		if player.id == id {
+			return player
+		}
+	}
+	return nil
+}
+
+func (game *Game) GetOpponents(id string) []*Player {
+	opponents := make([]*Player, 0)
+	for _, player := range game.players {
+		if player.id != id {
+			opponents = append(opponents, player)
+		}
+	}
+	return opponents
 }

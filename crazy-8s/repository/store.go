@@ -9,6 +9,8 @@ type GameStore struct {
 	Players []PlayerStore
 	Deck []CardStore
 	DiscardPile []CardStore
+	Status string
+	CurrentTurn string
 } 
 
 type PlayerStore struct {
@@ -46,6 +48,8 @@ func NewGameStore(game *gamePkg.Game) GameStore {
 		Players: players,
 		Deck: deckCards,
 		DiscardPile: discardPile,
+		Status: string(game.GetStatus()),
+		CurrentTurn: game.GetCurrentTurn(),
 	}
 }
 
