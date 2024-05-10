@@ -26,33 +26,98 @@ type GameResponse struct {
 	Status      string           `json:"status"`
 }
 
-func NewGameResponse(game *game.Game, connectionId string) GameResponse {
-	opponents := make([]PlayerResponse, 0)
-	for _, player := range game.GetOpponents(connectionId) {
-		opponents = append(opponents, NewPlayerResponse(player))
+type NewGameResponseOption = func(*GameResponse)
+
+func NewGameResponseMap(game *game.Game) map[string]GameResponse {
+	responseMap := make(map[string]GameResponse)
+
+	playerResponseMap := make(map[string]PlayerResponse, 0)
+	for _, player := range game.GetPlayers() {
+		playerResponseMap[player.GetId()] = NewPlayerResponse(player)
 	}
 
-	deck := make([]CardResponse, 0)
-	for _, card := range game.GetDeck().GetCards() {
-		deck = append(deck, NewCardResponse(card))
+	deck := NewCardResponses(game.GetDeck().GetCards())
+	discardPile := NewCardResponses(game.GetDiscardPile())
+
+	for _, player := range game.GetPlayers() {
+		playerResponse := playerResponseMap[player.GetId()]
+		opponents := NewPlayerResponses(game.GetOpponents(player.GetId()))
+		responseMap[player.GetId()] = NewGameResponse(
+			game,
+			player.GetId(),
+			WithPlayer(playerResponse),
+			WithOpponents(opponents),
+			WithDeck(deck),
+			WithDiscardPile(discardPile),
+		)
+		
 	}
 
-	discardPile := make([]CardResponse, 0)
-	for _, card := range game.GetDiscardPile() {
-		discardPile = append(discardPile, NewCardResponse(card))
-	}
+	return responseMap
+}
 
-	return GameResponse{
+func NewGameResponse(game *game.Game, connectionId string, options ...NewGameResponseOption) GameResponse {
+	gameResponse := &GameResponse{
 		GameId:      game.GetId(),
 		MaxPoints:   game.GetMaxPoints(),
 		Owner:       game.GetOwnerId(),
-		Player:      NewPlayerResponse(game.GetPlayer(connectionId)),
-		Opponents:   opponents,
-		Deck:        deck,
-		DiscardPile: discardPile,
 		Status:      string(game.GetStatus()),
 		CurrentTurn: game.GetCurrentTurn(),
 	}
+
+	for _, option := range options {
+		option(gameResponse)
+	}
+
+	if gameResponse.Player.Id == "" {
+		gameResponse.Player = NewPlayerResponse(game.GetPlayer(connectionId))
+	}
+
+	if gameResponse.Opponents == nil {
+		gameResponse.Opponents = NewPlayerResponses(game.GetOpponents(connectionId))
+	}
+
+	if gameResponse.Deck == nil {
+		gameResponse.Deck = NewCardResponses(game.GetDeck().GetCards())
+	}
+
+	if gameResponse.DiscardPile == nil {
+		gameResponse.DiscardPile = NewCardResponses(game.GetDiscardPile())
+	}
+
+	return *gameResponse
+}
+
+func WithPlayer(player PlayerResponse) NewGameResponseOption {
+	return func(gameResponse *GameResponse) {
+		gameResponse.Player = player
+	}
+}
+
+func WithOpponents(opponents []PlayerResponse) NewGameResponseOption {
+	return func(gameResponse *GameResponse) {
+		gameResponse.Opponents = opponents
+	}
+}
+
+func WithDeck(deck []CardResponse) NewGameResponseOption {
+	return func(gameResponse *GameResponse) {
+		gameResponse.Deck = deck
+	}
+}
+
+func WithDiscardPile(discardPile []CardResponse) NewGameResponseOption {
+	return func(gameResponse *GameResponse) {
+		gameResponse.DiscardPile = discardPile
+	}
+}
+
+func NewPlayerResponses(players []*game.Player) []PlayerResponse {
+	playerResponses := make([]PlayerResponse, 0)
+	for _, player := range players {
+		playerResponses = append(playerResponses, NewPlayerResponse(player))
+	}
+	return playerResponses
 }
 
 func NewPlayerResponse(player *game.Player) PlayerResponse {
@@ -67,6 +132,14 @@ func NewPlayerResponse(player *game.Player) PlayerResponse {
 		Points: player.GetPoints(),
 		Hand:   playerHand,
 	}
+}
+
+func NewCardResponses(cards []*game.Card) []CardResponse {
+	cardResponses := make([]CardResponse, 0)
+	for _, card := range cards {
+		cardResponses = append(cardResponses, NewCardResponse(card))
+	}
+	return cardResponses
 }
 
 func NewCardResponse(card *game.Card) CardResponse {

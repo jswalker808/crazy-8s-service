@@ -7,8 +7,8 @@ import (
 )
 
 type BaseRequest struct {
-	Action string `json::"action"`
-	GameRequest json.RawMessage `json::"gameRequest"`
+	Action string `json:"action"`
+	GameRequest json.RawMessage `json:"gameRequest"`
 }
 
 type Request interface {
@@ -16,10 +16,19 @@ type Request interface {
 }
 
 type CreateGameRequest struct {
-	PlayerName string `json::"playerName"`
+	PlayerName string `json:"playerName"`
+}
+
+type JoinGameRequest struct {
+	PlayerName string `json:"playerName"`
+	GameId string `json::"gameId"`
 }
 
 func (request *CreateGameRequest) Validate() error {
+	return nil
+}
+
+func (request *JoinGameRequest) Validate() error {
 	return nil
 }
 
@@ -44,6 +53,8 @@ func NewGameRequest(baseRequest *BaseRequest) (Request, error) {
 	switch action := baseRequest.Action; action {
 		case "create_game":
 			return unmarshalGameRequest(&CreateGameRequest{})
+		case "join_game":
+			return unmarshalGameRequest(&JoinGameRequest{})
 		default:
 			return nil, errors.New("player action %v is not supported")
 	}

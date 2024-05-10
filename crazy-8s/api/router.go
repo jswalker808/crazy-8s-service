@@ -22,6 +22,8 @@ func (router *Router) HandleRequest(ctx context.Context, action string, request 
 	switch action {
 		case "create_game":
 			return router.handleCreateGame(ctx, request)
+		case "join_game":
+			return router.handleJoinGame(ctx, request)
 		default:
 			return fmt.Errorf("unsupported game action: %v", action)
 	}
@@ -33,6 +35,14 @@ func (router *Router) handleCreateGame(ctx context.Context, request transport.Re
 		return fmt.Errorf("CreateGameRequest is required to create a new game")
 	}
 	return router.gameService.CreateGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
+}
+
+func (router *Router) handleJoinGame(ctx context.Context, request transport.Request) error {
+	gameRequest, ok := request.(*transport.JoinGameRequest)
+	if !ok {
+		return fmt.Errorf("JoinGameRequest is required to join an existing game")
+	}
+	return router.gameService.JoinGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
 }
 
 func (router *Router) GameService() *service.GameService {

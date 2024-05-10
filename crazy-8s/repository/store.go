@@ -53,6 +53,43 @@ func NewGameStore(game *gamePkg.Game) GameStore {
 	}
 }
 
+func NewGameFromStore(gameStore GameStore) (*gamePkg.Game , error) {
+	players := make([]*gamePkg.Player, 0)
+	for _, playerStore := range gameStore.Players {
+		hand := make([]*gamePkg.Card, 0)
+		for _, cardStore := range playerStore.Hand {
+			hand = append(hand, gamePkg.NewCard(cardStore.Color, cardStore.Number))
+		}
+		players = append(players, gamePkg.NewPlayerFromExisting(playerStore.Id, playerStore.Name, hand, playerStore.Points))
+	}
+
+	deck := make([]*gamePkg.Card, 0)
+	for _, cardStore := range gameStore.Deck {
+		deck = append(deck, gamePkg.NewCard(cardStore.Color, cardStore.Number))
+	}
+
+	discardPile := make([]*gamePkg.Card, 0)
+	for _, cardStore := range gameStore.DiscardPile {
+		discardPile = append(discardPile, gamePkg.NewCard(cardStore.Color, cardStore.Number))
+	}
+
+	status, parseErr := gamePkg.ParseStatus(gameStore.Status)
+	if parseErr != nil {
+		return nil, parseErr
+	}
+
+	return gamePkg.NewGameFromExisting(
+		gameStore.Id,
+		gameStore.OwnerId,
+		gameStore.MaxPoints,
+		players,
+		deck,
+		discardPile,
+		status,
+		gameStore.CurrentTurn,
+	), nil
+}
+
 func NewPlayerStore(player *gamePkg.Player) PlayerStore {
 
 	hand := make([]CardStore, 0)

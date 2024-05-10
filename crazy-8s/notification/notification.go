@@ -10,6 +10,12 @@ import (
 
 type Notifier interface {
 	Send(string, []byte)
+	SendAll(map[string][]byte)
+}
+
+type NotificationError struct {
+	ConnectionId string
+	Error error
 }
 
 type ApiGatewayNotifier struct {
@@ -40,5 +46,26 @@ func (apiGatewayNotifier *ApiGatewayNotifier) Send(connectionId string, bytes []
 	return nil
 }
 
+func (apiGatewayNotifier *ApiGatewayNotifier) SendAll(notificationMap map[string][]byte) []NotificationError {
+	numNotifications := len(notificationMap)
+	resultChannel := make(chan NotificationError, numNotifications)
+
+	for connectionId, bytes := range notificationMap {
+		go func(connectionId string, bytes []byte) {
+			resultChannel <- NotificationError{connectionId, apiGatewayNotifier.Send(connectionId, bytes)}
+		}(connectionId, bytes)
+	}
+
+	notificationErrors := make([]NotificationError, 0)
+	for i := 0; i < numNotifications; i++ {
+		if notificationError := <-resultChannel; notificationError.Error != nil {
+			notificationErrors = append(notificationErrors, notificationError)
+		}
+	}
+
+	close(resultChannel)
+
+	return notificationErrors
+}
 
 

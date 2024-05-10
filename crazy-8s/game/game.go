@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -12,8 +13,19 @@ type Status string
 
 const (
 	PENDING Status = "pending"
-	IN_PROGRESS = "in_progress"
+	IN_PROGRESS Status = "in_progress"
 )
+
+func ParseStatus(str string) (Status, error) {
+	switch strings.ToLower(str) {
+    case "pending":
+        return PENDING, nil
+    case "in_progress":
+        return IN_PROGRESS, nil
+    default:
+        return "", fmt.Errorf("unable to parse \"%v\" to a status", str)
+    }
+}
 
 type Game struct {
 	id string
@@ -40,6 +52,28 @@ func NewGame(ownerId string, ownerName string) *Game {
 		discardPile: make([]*Card, 0),
 		status: PENDING,
 		currentTurn: "",
+	}
+}
+
+func NewGameFromExisting(
+	id string,
+	ownerId string,
+	maxPoints int,
+	players []*Player,
+	deck []*Card ,
+	discardPile []*Card,
+	status Status,
+	currentTurn string,
+) *Game {
+	return &Game{
+		id: id,
+		ownerId: ownerId,
+		maxPoints: maxPoints,
+		players: players,
+		deck: NewStandardDeckFromExisting(deck),
+		discardPile: discardPile,
+		status: status,
+		currentTurn: currentTurn,
 	}
 }
 
@@ -105,4 +139,12 @@ func (game *Game) GetOpponents(id string) []*Player {
 		}
 	}
 	return opponents
+}
+
+func (game *Game) AddPlayer(player *Player) error {
+	if (len(game.players) == maxPlayers) {
+		return fmt.Errorf("reached max number of players: %v", maxPlayers)
+	}
+	game.players = append(game.players, player)
+	return nil
 }

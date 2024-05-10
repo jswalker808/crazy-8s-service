@@ -23,6 +23,15 @@ func NewPlayer(id string, name string) *Player {
 	}
 }
 
+func NewPlayerFromExisting(id string, name string, hand []*Card, points int) *Player {
+	return &Player{
+		id: id,
+		name: name,
+		hand: hand,
+		points: points,
+	}
+}
+
 func (player *Player) String() string {
 	var sb strings.Builder
 	for _, card := range player.hand {

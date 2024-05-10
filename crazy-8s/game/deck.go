@@ -37,6 +37,12 @@ func NewStandardDeck() *StandardDeck {
 	return deck
 }
 
+func NewStandardDeckFromExisting(cards []*Card) *StandardDeck {
+	return &StandardDeck{
+		cards: cards,
+	}
+}
+
 func (deck *StandardDeck) Draw() (*Card, error) {
 	if len(deck.cards) == 0 {
 		return nil, errors.New("deck is empty, unable to draw")
