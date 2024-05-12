@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const maxPlayers = 4
+const MaxPlayers = 4
 
 type Status string
 
@@ -40,7 +40,7 @@ type Game struct {
 
 func NewGame(ownerId string, ownerName string) *Game {
 	owner := NewPlayer(ownerId, ownerName)
-	players := make([]*Player, 0, maxPlayers)
+	players := make([]*Player, 0, MaxPlayers)
 	players = append(players, owner)
 
 	return &Game{
@@ -142,8 +142,8 @@ func (game *Game) GetOpponents(id string) []*Player {
 }
 
 func (game *Game) AddPlayer(player *Player) error {
-	if (len(game.players) == maxPlayers) {
-		return fmt.Errorf("reached max number of players: %v", maxPlayers)
+	if (len(game.players) == MaxPlayers) {
+		return fmt.Errorf("reached max number of players: %v", MaxPlayers)
 	}
 	game.players = append(game.players, player)
 	return nil

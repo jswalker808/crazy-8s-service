@@ -45,3 +45,73 @@ func TestNewGame(t *testing.T) {
 	assert.Equal(PENDING, actual.GetStatus())
 	assert.Empty(actual.GetCurrentTurn())
 }
+
+func TestGetOwner(t *testing.T) {
+	assert := assert.New(t)
+
+	givenOwnerId := "ownerId"
+	givenOwnerName := "TestUser"
+
+	actual := NewGame(givenOwnerId, givenOwnerName)
+	
+	owner := actual.GetOwner()
+	assert.NotNil(owner)
+	assert.Equal(givenOwnerId, owner.GetId())
+	assert.Equal(givenOwnerName, owner.GetName())
+}
+
+func TestGetPlayer(t *testing.T) {
+	assert := assert.New(t)
+
+	givenOwnerId := "ownerId"
+	givenOwnerName := "TestUser"
+	givenGame := NewGame(givenOwnerId, givenOwnerName)
+
+	var tests = []struct {
+		name string
+		givenPlayerId string
+		playerFound bool
+	} {
+		{"Existing Player", givenOwnerId, true},
+		{"Non-existent player", "bogusPlayerId", false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := givenGame.GetPlayer(test.givenPlayerId)
+			assert.Equal(test.playerFound, actual != nil)
+		})
+	}
+}
+
+func TestAddPlayer(t *testing.T) {
+	assert := assert.New(t)
+
+	givenOwnerId := "ownerId"
+	givenOwnerName := "TestUser"
+
+	actual := NewGame(givenOwnerId, givenOwnerName)
+	assert.Equal(1, len(actual.GetPlayers()))
+
+	err := actual.AddPlayer(NewPlayer("newPlayerId", "newPlayerName"))
+	assert.Equal(2, len(actual.GetPlayers()))
+	assert.NoError(err)
+}
+
+func TestAddPlayerMax(t *testing.T) {
+	assert := assert.New(t)
+
+	givenOwnerId := "ownerId"
+	givenOwnerName := "TestUser"
+
+	actual := NewGame(givenOwnerId, givenOwnerName)
+	assert.Equal(1, len(actual.GetPlayers()))
+
+	for i := 1; i < MaxPlayers; i++ {
+		assert.NoError(actual.AddPlayer(NewPlayer("playerId", "playerName")))
+		assert.Equal(i + 1, len(actual.GetPlayers()))
+	}
+
+	assert.Error(actual.AddPlayer(NewPlayer("playerId", "playerName")))
+}
+

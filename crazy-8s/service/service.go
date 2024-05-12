@@ -21,6 +21,10 @@ func NewGameService(gameRepository *repository.GameRepository, notifier *notific
 	}
 }
 
+func (service *GameService) Notifier() *notification.ApiGatewayNotifier {
+	return service.notifier
+}
+
 func (service *GameService) CreateGame(connectionId string, request *transport.CreateGameRequest) error {
 	log.Println("Creating new game")
 	log.Printf("connectionId: %v", connectionId)
@@ -34,7 +38,7 @@ func (service *GameService) CreateGame(connectionId string, request *transport.C
 
 	createdGameBytes, jsonErr := json.Marshal(transport.NewGameResponse(createdGame, connectionId))
 	if jsonErr != nil {
-		panic("Unable to marshal created game to JSON")
+		return jsonErr
 	}
 
 	log.Println(createdGameBytes)
@@ -87,6 +91,3 @@ func (service *GameService) JoinGame(connectionId string, request *transport.Joi
 	return nil
 }
 
-func (service *GameService) Notifier() *notification.ApiGatewayNotifier {
-	return service.notifier
-}
