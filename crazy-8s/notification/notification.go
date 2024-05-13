@@ -9,8 +9,8 @@ import (
 )
 
 type Notifier interface {
-	Send(string, []byte)
-	SendAll(map[string][]byte)
+	Send(string, []byte) error
+	SendAll(map[string][]byte) []NotificationError
 }
 
 type NotificationError struct {

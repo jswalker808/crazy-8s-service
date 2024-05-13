@@ -11,17 +11,17 @@ import (
 
 type GameService struct {
 	gameRepository *repository.GameRepository
-	notifier       *notification.ApiGatewayNotifier
+	notifier       notification.Notifier
 }
 
-func NewGameService(gameRepository *repository.GameRepository, notifier *notification.ApiGatewayNotifier) *GameService {
+func NewGameService(gameRepository *repository.GameRepository, notifier notification.Notifier) *GameService {
 	return &GameService{
 		gameRepository: gameRepository,
 		notifier:       notifier,
 	}
 }
 
-func (service *GameService) Notifier() *notification.ApiGatewayNotifier {
+func (service *GameService) Notifier() notification.Notifier {
 	return service.notifier
 }
 
