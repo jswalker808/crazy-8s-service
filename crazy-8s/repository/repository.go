@@ -12,8 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-var tableName = os.Getenv("TABLE_NAME")
-
 type GameRepository struct  {
 	dynamoDbClient *dynamodb.Client
 }
@@ -37,7 +35,7 @@ func (repository *GameRepository) CreateGame(game *gamePkg.Game) (*gamePkg.Game,
 	log.Println(attributeValue)
 
 	_, putItemErr := repository.dynamoDbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(getTableName()),
 		Item: attributeValue,
 	})
 	if putItemErr != nil {
@@ -52,7 +50,7 @@ func (repository *GameRepository) GetGame(gameId string) (*gamePkg.Game, error) 
 		Key: map[string]types.AttributeValue{
 			"gameId": &types.AttributeValueMemberS{Value: gameId},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(getTableName()),
 	});
 
 	if getItemErr != nil {
@@ -89,7 +87,7 @@ func (repository *GameRepository) AddPlayer(gameId string, player *gamePkg.Playe
 		Key: map[string]types.AttributeValue{
 			"gameId": &types.AttributeValueMemberS{Value: gameId},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(getTableName()),
 		UpdateExpression: aws.String("SET Players = list_append(Players, :newPlayers)"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":newPlayers": &types.AttributeValueMemberL{
@@ -107,4 +105,8 @@ func (repository *GameRepository) AddPlayer(gameId string, player *gamePkg.Playe
 	}
 
 	return nil
+}
+
+func getTableName() string {
+	return os.Getenv("TABLE_NAME")
 }

@@ -34,7 +34,8 @@ func (router *Router) handleCreateGame(ctx context.Context, request transport.Re
 	if !ok {
 		return fmt.Errorf("CreateGameRequest is required to create a new game")
 	}
-	return router.gameService.CreateGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
+	_, err := router.gameService.CreateGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
+	return err
 }
 
 func (router *Router) handleJoinGame(ctx context.Context, request transport.Request) error {
@@ -42,7 +43,8 @@ func (router *Router) handleJoinGame(ctx context.Context, request transport.Requ
 	if !ok {
 		return fmt.Errorf("JoinGameRequest is required to join an existing game")
 	}
-	return router.gameService.JoinGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
+	_, err := router.gameService.JoinGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
+	return err
 }
 
 func (router *Router) GameService() *service.GameService {

@@ -25,49 +25,47 @@ func (service *GameService) Notifier() notification.Notifier {
 	return service.notifier
 }
 
-func (service *GameService) CreateGame(connectionId string, request *transport.CreateGameRequest) error {
+func (service *GameService) CreateGame(connectionId string, request *transport.CreateGameRequest) (*gamePkg.Game, error) {
 	log.Println("Creating new game")
 	log.Printf("connectionId: %v", connectionId)
 
 	createdGame, createGameErr := service.gameRepository.CreateGame(gamePkg.NewGame(connectionId, request.PlayerName))
 	if createGameErr != nil {
-		return createGameErr
+		return nil, createGameErr
 	}
 
 	log.Printf("Game was successfully added to database")
 
 	createdGameBytes, jsonErr := json.Marshal(transport.NewGameResponse(createdGame, connectionId))
 	if jsonErr != nil {
-		return jsonErr
+		return nil, jsonErr
 	}
-
-	log.Println(createdGameBytes)
 
 	if notifyErr := service.notifier.Send(connectionId, createdGameBytes); notifyErr != nil {
-		return notifyErr
+		return nil, notifyErr
 	}
 
-	return nil
+	return createdGame, nil
 }
 
-func (service *GameService) JoinGame(connectionId string, request *transport.JoinGameRequest) error {
+func (service *GameService) JoinGame(connectionId string, request *transport.JoinGameRequest) (*gamePkg.Game, error) {
 	log.Println("Joining game")
 	log.Printf("connectionId: %v", connectionId)
 
 	game, getGameErr := service.gameRepository.GetGame(request.GameId)
 	if getGameErr != nil {
-		return getGameErr
+		return nil, getGameErr
 	}
 
 	newPlayer := gamePkg.NewPlayer(connectionId, request.PlayerName)
 	addPlayerErr := game.AddPlayer(newPlayer)
 	if addPlayerErr != nil {
-		return addPlayerErr
+		return nil, addPlayerErr
 	}
 
 	storePlayerErr := service.gameRepository.AddPlayer(request.GameId, newPlayer)
 	if storePlayerErr != nil {
-		return storePlayerErr
+		return nil, storePlayerErr
 	}
 
 	log.Printf("game with added player: %v", game)
@@ -78,7 +76,7 @@ func (service *GameService) JoinGame(connectionId string, request *transport.Joi
 	for connectionId, gameResponse := range gameResponseMap {
 		gameBytes, jsonErr := json.Marshal(gameResponse)
 		if jsonErr != nil {
-			return jsonErr
+			return nil, jsonErr
 		}
 		gameBytesMap[connectionId] = gameBytes
 	}
@@ -88,6 +86,6 @@ func (service *GameService) JoinGame(connectionId string, request *transport.Joi
 		log.Printf("Connection %v ran into an error: %v", err.ConnectionId, err.Error)
 	}
 
-	return nil
+	return game, nil
 }
 
