@@ -1,5 +1,3 @@
-//build+ integration
-
 package service
 
 import (
@@ -8,10 +6,8 @@ import (
 	"crazy-8s/repository"
 	"crazy-8s/testutil"
 	"crazy-8s/transport"
-	"crypto/tls"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"testing"
 
@@ -50,14 +46,8 @@ func (suite *GameServiceTestSuite) SetupSuite() {
 		}
 		return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 	})
-
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
 	
-	config, err := awsConfig.LoadDefaultConfig(suite.ctx, awsConfig.WithRegion("us-west-1"), awsConfig.WithEndpointResolverWithOptions(customResolver), awsConfig.WithHTTPClient(httpClient))
+	config, err := awsConfig.LoadDefaultConfig(suite.ctx, awsConfig.WithRegion("us-west-1"), awsConfig.WithEndpointResolverWithOptions(customResolver))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -91,6 +81,10 @@ func (suite *GameServiceTestSuite) SetupSuite() {
 }
 
 func (suite *GameServiceTestSuite) TestCreateGame() {
+	if (testing.Short()) {
+		suite.T().Skip("skipping integration test")
+	}
+
 	assert := assert.New(suite.T())
 
 	connectionId := "testConnectionId1"
@@ -103,6 +97,10 @@ func (suite *GameServiceTestSuite) TestCreateGame() {
 }
 
 func (suite *GameServiceTestSuite) TestJoinGame() {
+	if (testing.Short()) {
+		suite.T().Skip("skipping integration test")
+	}
+
 	assert := assert.New(suite.T())
 
 	connectionId := "testConnectionId1"
@@ -123,5 +121,8 @@ func (suite *GameServiceTestSuite) TestJoinGame() {
 }
 
 func TestIntegrationGameServiceTestSuite(t *testing.T) {
+	if (testing.Short()) {
+		t.Skip("skipping integration test")
+	}
 	suite.Run(t, new(GameServiceTestSuite))
 }

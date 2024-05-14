@@ -11,8 +11,7 @@
             "mode": "auto",
             "program": "${workspaceFolder}/crazy-8s/main.go",
             "env": {},
-            "args": [],
-            "buildFlags": ["-tags=integration"]
+            "args": []
         }
     ]
 }

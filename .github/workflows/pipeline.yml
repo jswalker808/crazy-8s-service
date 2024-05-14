@@ -19,5 +19,7 @@ jobs:
           aws-region: us-west-1
       - name: Run Unit tests
         run: make unit-tests
+      - name: Run Integration tests
+        run: make integ-tests
       - run: sam build --use-container
       - run: sam deploy --config-env prod --parameter-overrides "ParameterKey=Environment,ParameterValue=prod"
