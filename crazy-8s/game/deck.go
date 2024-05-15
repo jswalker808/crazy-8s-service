@@ -67,7 +67,7 @@ func (deck *StandardDeck) String() string {
 	var sb strings.Builder
 	for _, card := range deck.cards {
 		sb.WriteString(fmt.Sprint(card))
-		sb.WriteString(fmt.Sprint(","))
+		sb.WriteString(",")
 	}
 	return fmt.Sprintf("StandardDeck[cards=%v]", sb.String())
 }

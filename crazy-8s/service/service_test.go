@@ -25,7 +25,6 @@ func (mock *MockNotifier) SendAll(connectionMap map[string][]byte) []notificatio
 
 type GameServiceTestSuite struct {
 	suite.Suite
-	dynamoDbContainer *testutil.DynamoDbContainer
 	service  *GameService
 	ctx context.Context
 }

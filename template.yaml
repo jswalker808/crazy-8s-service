@@ -153,6 +153,9 @@ Resources:
       SSESpecification:
         SSEEnabled: True
       TableName: !Sub ${TableName}-${Environment}
+      TimeToLiveSpecification:
+        AttributeName: "expireAt"
+        Enabled: true
 
   ApiCWLRoleArn:
     Type: AWS::ApiGateway::Account

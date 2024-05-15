@@ -1,6 +1,9 @@
 package repository
 
-import gamePkg "crazy-8s/game"
+import (
+	gamePkg "crazy-8s/game"
+	"time"
+)
 
 type GameStore struct {
 	Id string `dynamodbav:"gameId"`
@@ -11,6 +14,8 @@ type GameStore struct {
 	DiscardPile []CardStore
 	Status string
 	CurrentTurn string
+	UpdatedAt int
+	ExpireAt int `dynamodbav:"expireAt"`
 } 
 
 type PlayerStore struct {
@@ -41,6 +46,8 @@ func NewGameStore(game *gamePkg.Game) GameStore {
 		discardPile = append(discardPile, NewCardStore(card))
 	}
 
+	updatedAt, expireAt := GetUpdateAndExpireTimes()
+
 	return GameStore{
 		Id: game.GetId(),
 		OwnerId: game.GetOwnerId(),
@@ -50,6 +57,8 @@ func NewGameStore(game *gamePkg.Game) GameStore {
 		DiscardPile: discardPile,
 		Status: string(game.GetStatus()),
 		CurrentTurn: game.GetCurrentTurn(),
+		UpdatedAt: updatedAt,
+		ExpireAt: expireAt,
 	}
 }
 
@@ -91,7 +100,6 @@ func NewGameFromStore(gameStore GameStore) (*gamePkg.Game , error) {
 }
 
 func NewPlayerStore(player *gamePkg.Player) PlayerStore {
-
 	hand := make([]CardStore, 0)
 	for _, card := range player.GetHand() {
 		hand = append(hand, NewCardStore(card))
@@ -110,4 +118,11 @@ func NewCardStore(card *gamePkg.Card) CardStore {
 		Color: card.GetColor(),
 		Number: card.GetNumber(),
 	}
+}
+
+func GetUpdateAndExpireTimes() (updatedTime int, expireTime int) {
+	currentTime := time.Now()
+	updatedTime = int(currentTime.Unix())
+	expireTime = int(currentTime.Add(24 * time.Hour).Unix())
+	return
 }
