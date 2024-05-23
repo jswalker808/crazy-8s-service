@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"crazy-8s/notification"
-	"crazy-8s/repository"
+	repositoryPkg "crazy-8s/repository"
 	"crazy-8s/testutil"
 	"crazy-8s/transport"
 	"fmt"
@@ -52,7 +52,9 @@ func (suite *GameServiceTestSuite) SetupSuite() {
 	}
 
 	tableName := "TestTable"
+	connectionTableName := "ConnectionsTable"
 	os.Setenv("TABLE_NAME", tableName)
+	os.Setenv("CONNECTIONS_TABLE_NAME", connectionTableName)
 
 	dynamoDbClient := dynamodb.NewFromConfig(config)
 	_, createTableErr := dynamoDbClient.CreateTable(suite.ctx, &dynamodb.CreateTableInput{
@@ -75,8 +77,30 @@ func (suite *GameServiceTestSuite) SetupSuite() {
 		log.Fatal(err)
 	}
 
-	repository := repository.NewGameRepository(dynamoDbClient)
-	suite.service = NewGameService(repository, &MockNotifier{})
+	_, createConnTableErr := dynamoDbClient.CreateTable(suite.ctx, &dynamodb.CreateTableInput{
+		TableName: aws.String(connectionTableName),
+		KeySchema: []types.KeySchemaElement{
+			{
+				AttributeName: aws.String("connectionId"),
+				KeyType:       types.KeyTypeHash,
+			},
+		},
+		AttributeDefinitions: []types.AttributeDefinition{
+			{
+				AttributeName: aws.String("connectionId"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+	})
+	if (createConnTableErr != nil) {
+		log.Fatal(err)
+	}
+
+	gameRepository := repositoryPkg.NewGameRepository(dynamoDbClient)
+	connectionRepository := repositoryPkg.NewConnectionRepository(dynamoDbClient)
+
+	suite.service = NewGameService(gameRepository, connectionRepository, &MockNotifier{})
 }
 
 func (suite *GameServiceTestSuite) TestCreateGame() {

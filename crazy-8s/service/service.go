@@ -11,12 +11,17 @@ import (
 
 type GameService struct {
 	gameRepository *repository.GameRepository
+	connectionRepository *repository.ConnectionRepository
 	notifier       notification.Notifier
 }
 
-func NewGameService(gameRepository *repository.GameRepository, notifier notification.Notifier) *GameService {
+func NewGameService(
+	gameRepository *repository.GameRepository,
+	connectionRepository *repository.ConnectionRepository,
+	notifier notification.Notifier) *GameService {
 	return &GameService{
 		gameRepository: gameRepository,
+		connectionRepository: connectionRepository,
 		notifier:       notifier,
 	}
 }
@@ -35,6 +40,10 @@ func (service *GameService) CreateGame(connectionId string, request *transport.C
 	}
 
 	log.Printf("Game was successfully added to database")
+
+	if addConnectionErr := service.connectionRepository.AddConnection(connectionId, createdGame.GetId()); addConnectionErr != nil {
+		return nil, addConnectionErr
+	}
 
 	createdGameBytes, jsonErr := json.Marshal(transport.NewGameResponse(createdGame, connectionId))
 	if jsonErr != nil {
@@ -69,6 +78,10 @@ func (service *GameService) JoinGame(connectionId string, request *transport.Joi
 	}
 
 	log.Printf("game with added player: %v", game)
+
+	if addConnectionErr := service.connectionRepository.AddConnection(connectionId, request.GameId); addConnectionErr != nil {
+		return nil, addConnectionErr
+	}
 
 	gameResponseMap := transport.NewGameResponseMap(game)
 
