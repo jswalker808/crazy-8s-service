@@ -16,10 +16,18 @@ Parameters:
     AllowedValues:
       - prod
       - dev
-  TableName:
+  GameTableName:
     Type: String
     Default: "crazy_eights_games"
     Description: The name of the DynamoDB table to store Crazy 8's game state
+    MinLength: 3
+    MaxLength: 50
+    AllowedPattern: ^[A-Za-z_]+$
+    ConstraintDescription: "Required. Can be characters and underscore only. No numbers or special characters allowed."
+  ConnectionsTableName:
+    Type: String
+    Default: "connections"
+    Description: The name of the DynamoDB table to store connection information
     MinLength: 3
     MaxLength: 50
     AllowedPattern: ^[A-Za-z_]+$
@@ -38,10 +46,13 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          TABLE_NAME: !Sub ${TableName}-${Environment}
+          TABLE_NAME: !Sub ${GameTableName}-${Environment}
+          CONNECTIONS_TABLE_NAME: !Sub ${ConnectionsTableName}-${Environment}
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Sub ${TableName}-${Environment}
+            TableName: !Sub ${GameTableName}-${Environment}
+        - DynamoDBCrudPolicy:
+            TableName: !Sub ${ConnectionsTableName}-${Environment}
         - Statement:
           - Effect: Allow
             Action:
@@ -152,10 +163,24 @@ Resources:
           KeyType: "HASH"
       SSESpecification:
         SSEEnabled: True
-      TableName: !Sub ${TableName}-${Environment}
+      TableName: !Sub ${GameTableName}-${Environment}
       TimeToLiveSpecification:
         AttributeName: "expireAt"
         Enabled: true
+
+  ConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "connectionId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "connectionId"
+          KeyType: "HASH"
+      SSESpecification:
+        SSEEnabled: True
+      TableName: !Sub ${ConnectionsTableName}-${Environment}
 
   ApiCWLRoleArn:
     Type: AWS::ApiGateway::Account
