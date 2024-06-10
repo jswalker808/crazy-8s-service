@@ -85,11 +85,10 @@ func main() {
 
 	dynamoDbClient := dynamodb.NewFromConfig(awsConfig)
 	gameRepository := repository.NewGameRepository(dynamoDbClient)
-	connectionRepository := repository.NewConnectionRepository(dynamoDbClient)
 
 	apiGatewayNotifier := notification.NewApiGatewayNotifier()
 
-	gameService := service.NewGameService(gameRepository, connectionRepository, apiGatewayNotifier)
+	gameService := service.NewGameService(gameRepository, apiGatewayNotifier)
 
 	router = api.NewRouter(gameService)
 

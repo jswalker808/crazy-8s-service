@@ -98,9 +98,8 @@ func (suite *GameServiceTestSuite) SetupSuite() {
 	}
 
 	gameRepository := repositoryPkg.NewGameRepository(dynamoDbClient)
-	connectionRepository := repositoryPkg.NewConnectionRepository(dynamoDbClient)
 
-	suite.service = NewGameService(gameRepository, connectionRepository, &MockNotifier{})
+	suite.service = NewGameService(gameRepository, &MockNotifier{})
 }
 
 func (suite *GameServiceTestSuite) TestCreateGame() {

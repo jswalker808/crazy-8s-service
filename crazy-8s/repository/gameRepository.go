@@ -27,19 +27,35 @@ func (repository *GameRepository) CreateGame(game *gamePkg.Game) (*gamePkg.Game,
 
 	gameStore := NewGameStore(game)
 
-	attributeValue, marshalErr := attributevalue.MarshalMap(gameStore)
+	gameAttributeValue, marshalErr := attributevalue.MarshalMap(gameStore)
 	if marshalErr != nil {
 		return nil, marshalErr
 	}
 
-	log.Println(attributeValue)
+	connectionAttributeValue := map[string]types.AttributeValue{
+		"gameId": &types.AttributeValueMemberS{Value: game.GetId()},
+		"connectionId": &types.AttributeValueMemberS{Value: game.GetOwnerId()},
+	}
 
-	_, putItemErr := repository.dynamoDbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-		TableName: aws.String(getTableName()),
-		Item: attributeValue,
+	_, transactionErr := repository.dynamoDbClient.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
+		TransactItems: []types.TransactWriteItem{
+			{
+				Put: &types.Put{
+					TableName: aws.String(getGameConnectionsTableName()),
+					Item:      connectionAttributeValue,
+				},
+			},
+			{
+				Put: &types.Put{
+					TableName: aws.String(getGameTableName()),
+					Item:      gameAttributeValue,
+				},
+			},
+		},
 	})
-	if putItemErr != nil {
-		return nil, putItemErr
+
+	if transactionErr != nil {
+		return nil, transactionErr
 	}
 
 	return game, nil
@@ -50,7 +66,7 @@ func (repository *GameRepository) GetGame(gameId string) (*gamePkg.Game, error) 
 		Key: map[string]types.AttributeValue{
 			"gameId": &types.AttributeValueMemberS{Value: gameId},
 		},
-		TableName: aws.String(getTableName()),
+		TableName: aws.String(getGameTableName()),
 	});
 
 	if getItemErr != nil {
@@ -81,32 +97,51 @@ func (repository *GameRepository) AddPlayer(gameId string, player *gamePkg.Playe
 		return marshalErr
 	}
 
-	log.Println(attributeValue)
+	connectionAttributeValue := map[string]types.AttributeValue{
+		"gameId": &types.AttributeValueMemberS{Value: gameId},
+		"connectionId": &types.AttributeValueMemberS{Value: player.GetId()},
+	}
 
-	_, updateItemErr := repository.dynamoDbClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-		Key: map[string]types.AttributeValue{
-			"gameId": &types.AttributeValueMemberS{Value: gameId},
-		},
-		TableName: aws.String(getTableName()),
-		UpdateExpression: aws.String("SET Players = list_append(Players, :newPlayers)"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":newPlayers": &types.AttributeValueMemberL{
-				Value: []types.AttributeValue{
-                    &types.AttributeValueMemberM{
-                        Value: attributeValue,
-                    },
-                },
+	_, transactionErr := repository.dynamoDbClient.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
+		TransactItems: []types.TransactWriteItem{
+			{
+				Put: &types.Put{
+					TableName: aws.String(getGameConnectionsTableName()),
+					Item:      connectionAttributeValue,
+				},
+			},
+			{
+				Update: &types.Update{
+					Key: map[string]types.AttributeValue{
+						"gameId": &types.AttributeValueMemberS{Value: gameId},
+					},
+					TableName: aws.String(getGameTableName()),
+					UpdateExpression: aws.String("SET Players = list_append(Players, :newPlayers)"),
+					ExpressionAttributeValues: map[string]types.AttributeValue{
+						":newPlayers": &types.AttributeValueMemberL{
+							Value: []types.AttributeValue{
+								&types.AttributeValueMemberM{
+									Value: attributeValue,
+								},
+							},
+						},
+					},
+				},
 			},
 		},
-		ReturnValues: types.ReturnValueNone,
 	})
-	if updateItemErr != nil {
-		return updateItemErr
+
+	if transactionErr != nil {
+		return transactionErr
 	}
 
 	return nil
 }
 
-func getTableName() string {
+func getGameTableName() string {
 	return os.Getenv("TABLE_NAME")
+}
+
+func getGameConnectionsTableName() string {
+	return os.Getenv("CONNECTIONS_TABLE_NAME")
 }
