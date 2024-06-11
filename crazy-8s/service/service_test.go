@@ -142,6 +142,37 @@ func (suite *GameServiceTestSuite) TestJoinGame() {
 	assert.Equal(2, len(updatedGame.GetPlayers()))
 }
 
+func (suite *GameServiceTestSuite) TestLeaveGame() {
+	if (testing.Short()) {
+		suite.T().Skip("skipping integration test")
+	}
+
+	assert := assert.New(suite.T())
+
+	ownerConnectionId := "testConnectionId3"
+	secondPlayerConnectionId := "testConnectionId4"
+
+	createGameRequest := transport.CreateGameRequest{
+		PlayerName: "player3",
+	}
+	createdGame, err := suite.service.CreateGame(ownerConnectionId, &createGameRequest)
+	assert.NoError(err)
+
+	joinGameRequest := transport.JoinGameRequest{
+		PlayerName: "player4",
+		GameId: createdGame.GetId(),
+	}
+	updatedGame, err := suite.service.JoinGame(secondPlayerConnectionId, &joinGameRequest)
+	assert.NoError(err)
+	assert.NotNil(updatedGame)
+	assert.Equal(2, len(updatedGame.GetPlayers()))
+	
+	updatedGame, err = suite.service.LeaveGame(secondPlayerConnectionId)
+	assert.NoError(err)
+	assert.NotNil(updatedGame)
+	assert.Equal(1, len(updatedGame.GetPlayers()))
+}
+
 func TestIntegrationGameServiceTestSuite(t *testing.T) {
 	if (testing.Short()) {
 		t.Skip("skipping integration test")

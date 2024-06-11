@@ -18,6 +18,14 @@ func NewRouter(gameService *service.GameService) *Router {
 	}
 }
 
+func (router *Router) HandleDisconnect(connectionId string) error {
+	_, err := router.gameService.LeaveGame(connectionId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (router *Router) HandleRequest(ctx context.Context, action string, request transport.Request) error {
 	switch action {
 		case "create_game":

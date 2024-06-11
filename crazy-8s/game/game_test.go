@@ -115,3 +115,27 @@ func TestAddPlayerMax(t *testing.T) {
 	assert.Error(actual.AddPlayer(NewPlayer("playerId", "playerName")))
 }
 
+func TestRemovePlayer(t *testing.T) {
+	assert := assert.New(t)
+
+	givenOwnerId := "ownerId"
+	givenOwnerName := "TestUser"
+	givenGame := NewGame(givenOwnerId, givenOwnerName)
+	assert.Equal(1, len(givenGame.GetPlayers()))
+	assert.Equal(52, len(givenGame.GetDeck().GetCards()))
+
+	newCards := make([]*Card, 0)
+	newCards = append(newCards, NewCard(RED, 0))
+	newCards = append(newCards, NewCard(BLUE, 1))
+	newPlayer := NewPlayer("newPlayerId", "newPlayerName")
+	newPlayer.AddCards(newCards)
+	assert.Equal(2, len(newPlayer.GetHand()))
+
+	givenGame.AddPlayer(newPlayer)
+	assert.Equal(2, len(givenGame.GetPlayers()))
+
+	givenGame.RemovePlayer("newPlayerId")
+	assert.Equal(1, len(givenGame.GetPlayers()))
+	assert.Equal(54, len(givenGame.GetDeck().GetCards()))
+}
+

@@ -148,3 +148,12 @@ func (game *Game) AddPlayer(player *Player) error {
 	game.players = append(game.players, player)
 	return nil
 }
+
+func (game *Game) RemovePlayer(id string) {
+	for i, player := range game.players {
+		if player.id == id {
+			game.deck.ReturnCards(player.hand)
+			game.players = append(game.players[:i], game.players[i+1:]...)
+		}
+	}
+}

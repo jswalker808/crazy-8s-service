@@ -38,13 +38,25 @@ func handler(ctx context.Context, request APIGatewayRequest) (APIGatewayResponse
 			Body:       "Successfully connected",
 		}, nil
 	case "$disconnect":
-		return APIGatewayResponse{
-			StatusCode: 200,
-			Body:       "Successfully disconnected",
-		}, nil
+		return handleDisconnect(ctx)
 	default:
 		return handleGamePlay(ctx, request)
 	}
+}
+
+func handleDisconnect(ctx context.Context) (APIGatewayResponse, error) {
+	log.Printf("Disconnecting player %v", ctx.Value(global.ConnectionIdCtxKey{}))
+
+	err := router.HandleDisconnect(ctx.Value(global.ConnectionIdCtxKey{}).(string))
+	if (err != nil) {
+		return APIGatewayResponse{
+			StatusCode: 500,
+			Body:       err.Error(),
+		}, err
+	}
+	return APIGatewayResponse{
+		StatusCode: 200,
+	}, nil
 }
 
 func handleGamePlay(ctx context.Context, apiGatewayRequest APIGatewayRequest) (APIGatewayResponse, error) {

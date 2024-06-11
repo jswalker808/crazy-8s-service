@@ -91,3 +91,31 @@ func (service *GameService) JoinGame(connectionId string, request *transport.Joi
 	return game, nil
 }
 
+
+func (service *GameService) LeaveGame(connectionId string) (*gamePkg.Game, error) {
+	log.Println("Leaving game")
+	log.Printf("connectionId: %v", connectionId)
+
+	updatedGame,removePlayerErr := service.gameRepository.RemovePlayer(connectionId)
+	if removePlayerErr != nil {
+		return nil, removePlayerErr
+	}
+
+	gameResponseMap := transport.NewGameResponseMap(updatedGame)
+
+	gameBytesMap := make(map[string][]byte)
+	for connectionId, gameResponse := range gameResponseMap {
+		gameBytes, jsonErr := json.Marshal(gameResponse)
+		if jsonErr != nil {
+			return nil, jsonErr
+		}
+		gameBytesMap[connectionId] = gameBytes
+	}
+
+	notificationErrors := service.notifier.SendAll(gameBytesMap)
+	for _, err := range notificationErrors {
+		log.Printf("Connection %v ran into an error: %v", err.ConnectionId, err.Error)
+	}
+
+	return updatedGame, nil
+}

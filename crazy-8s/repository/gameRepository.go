@@ -138,6 +138,60 @@ func (repository *GameRepository) AddPlayer(gameId string, player *gamePkg.Playe
 	return nil
 }
 
+func (repository *GameRepository) RemovePlayer(connectionId string) (*gamePkg.Game, error) {
+	connectionAttributeValue := map[string]types.AttributeValue{
+		"connectionId": &types.AttributeValueMemberS{Value: connectionId},
+	}
+
+	deleteConnectionOutput, delectConnectionErr := repository.dynamoDbClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		Key: connectionAttributeValue,
+		TableName: aws.String(getGameConnectionsTableName()),
+		ReturnValues: types.ReturnValueAllOld,
+	})
+
+	if (delectConnectionErr != nil) {
+		return nil, delectConnectionErr
+	}
+
+	// Do nothing if connection is not tied to any game
+	if (deleteConnectionOutput.Attributes == nil) {
+		return nil, nil
+	}
+
+	gameId := deleteConnectionOutput.Attributes["gameId"].(*types.AttributeValueMemberS).Value
+	game, getGameErr := repository.GetGame(gameId)
+	if getGameErr != nil {
+		return nil, getGameErr
+	}
+
+	game.RemovePlayer(connectionId)
+
+	gameStore := NewGameStore(game)
+
+	playersAttributeValue, marshalErr := attributevalue.MarshalMap(map[string]interface{}{
+		":updatedPlayers": gameStore.Players,
+		":updatedDeck": gameStore.Deck,
+	})
+	if marshalErr != nil {
+		return nil, marshalErr
+	}
+
+	_, updateGameErr := repository.dynamoDbClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		Key: map[string]types.AttributeValue{
+			"gameId": &types.AttributeValueMemberS{Value: gameId},
+		},
+		TableName: aws.String(getGameTableName()),
+		UpdateExpression: aws.String("Set Players = :updatedPlayers, Deck = :updatedDeck"),
+		ExpressionAttributeValues: playersAttributeValue,
+	})
+
+	if updateGameErr != nil {
+		return nil, updateGameErr
+	}
+
+	return game, nil
+}
+
 func getGameTableName() string {
 	return os.Getenv("TABLE_NAME")
 }

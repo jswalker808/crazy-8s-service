@@ -53,6 +53,10 @@ func (player *Player) GetHand() []*Card {
 	return player.hand
 }
 
+func (player *Player) AddCards(cards []*Card) {
+	player.hand = append(player.hand, cards...)
+}
+
 func (player *Player) GetPoints() int {
 	return player.points
 }
