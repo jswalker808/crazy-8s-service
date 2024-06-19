@@ -1,6 +1,11 @@
 package transport
 
-import "crazy-8s/game"
+import (
+	"crazy-8s/game"
+	"encoding/json"
+	"fmt"
+	"log"
+)
 
 type CardResponse struct {
 	Number int    `json:"number"`
@@ -28,8 +33,8 @@ type GameResponse struct {
 
 type NewGameResponseOption = func(*GameResponse)
 
-func NewGameResponseMap(game *game.Game) map[string]GameResponse {
-	responseMap := make(map[string]GameResponse)
+func NewGameResponseMap(game *game.Game) map[string][]byte {
+	responseMap := make(map[string][]byte)
 
 	playerResponseMap := make(map[string]PlayerResponse, 0)
 	for _, player := range game.GetPlayers() {
@@ -50,13 +55,14 @@ func NewGameResponseMap(game *game.Game) map[string]GameResponse {
 			WithDeck(deck),
 			WithDiscardPile(discardPile),
 		)
-		
 	}
+
+	fmt.Printf("responseMap: %v\n", responseMap)
 
 	return responseMap
 }
 
-func NewGameResponse(game *game.Game, connectionId string, options ...NewGameResponseOption) GameResponse {
+func NewGameResponse(game *game.Game, connectionId string, options ...NewGameResponseOption) []byte {
 	gameResponse := &GameResponse{
 		GameId:      game.GetId(),
 		MaxPoints:   game.GetMaxPoints(),
@@ -85,7 +91,18 @@ func NewGameResponse(game *game.Game, connectionId string, options ...NewGameRes
 		gameResponse.DiscardPile = NewCardResponses(game.GetDiscardPile())
 	}
 
-	return *gameResponse
+	gameResponseBytes, jsonErr := json.Marshal(gameResponse)
+	if jsonErr != nil {
+		panic(jsonErr)
+	}
+
+	unmarshalErr := json.Unmarshal(gameResponseBytes, &gameResponse)
+	if unmarshalErr != nil {
+		panic(unmarshalErr)
+	}
+	log.Printf("unamrshaled gameResponse: %v", gameResponse)
+
+	return gameResponseBytes
 }
 
 func WithPlayer(player PlayerResponse) NewGameResponseOption {

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"crazy-8s/notification"
 	repositoryPkg "crazy-8s/repository"
 	"crazy-8s/testutil"
 	"crazy-8s/transport"
@@ -18,10 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
-
-type MockNotifier struct {}
-func (mock *MockNotifier) Send(connectionId string, bytes []byte) error { return nil }
-func (mock *MockNotifier) SendAll(connectionMap map[string][]byte) []notification.NotificationError { return make([]notification.NotificationError, 0) }
 
 type GameServiceTestSuite struct {
 	suite.Suite
@@ -99,7 +94,7 @@ func (suite *GameServiceTestSuite) SetupSuite() {
 
 	gameRepository := repositoryPkg.NewGameRepository(dynamoDbClient)
 
-	suite.service = NewGameService(gameRepository, &MockNotifier{})
+	suite.service = NewGameService(gameRepository)
 }
 
 func (suite *GameServiceTestSuite) TestCreateGame() {

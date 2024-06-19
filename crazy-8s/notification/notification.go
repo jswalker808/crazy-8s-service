@@ -9,7 +9,7 @@ import (
 )
 
 type Notifier interface {
-	Send(string, []byte) error
+	Send(string, []byte) NotificationError
 	SendAll(map[string][]byte) []NotificationError
 }
 
@@ -30,7 +30,7 @@ func (apiGatewayNotifier *ApiGatewayNotifier) SetClient(apiGatewayClient *apigat
 	apiGatewayNotifier.apiGatewayClient = apiGatewayClient
 }
 
-func (apiGatewayNotifier *ApiGatewayNotifier) Send(connectionId string, bytes []byte) error {
+func (apiGatewayNotifier *ApiGatewayNotifier) Send(connectionId string, bytes []byte) NotificationError {
 	log.Println(connectionId)
 
 	input := &apigatewaymanagementapi.PostToConnectionInput{
@@ -40,10 +40,10 @@ func (apiGatewayNotifier *ApiGatewayNotifier) Send(connectionId string, bytes []
 	
 	_, err := apiGatewayNotifier.apiGatewayClient.PostToConnection(context.TODO(), input)
 	if err != nil {
-		return err
+		return NotificationError{connectionId, err}
 	}
 
-	return nil
+	return NotificationError{}
 }
 
 func (apiGatewayNotifier *ApiGatewayNotifier) SendAll(notificationMap map[string][]byte) []NotificationError {
@@ -52,13 +52,14 @@ func (apiGatewayNotifier *ApiGatewayNotifier) SendAll(notificationMap map[string
 
 	for connectionId, bytes := range notificationMap {
 		go func(connectionId string, bytes []byte) {
-			resultChannel <- NotificationError{connectionId, apiGatewayNotifier.Send(connectionId, bytes)}
+			resultChannel <- apiGatewayNotifier.Send(connectionId, bytes)
 		}(connectionId, bytes)
 	}
 
-	notificationErrors := make([]NotificationError, 0)
+	notificationErrors := make([]NotificationError, 0, numNotifications)
 	for i := 0; i < numNotifications; i++ {
-		if notificationError := <-resultChannel; notificationError.Error != nil {
+		if notificationError := <-resultChannel; notificationError != (NotificationError{}) {
+			log.Printf("Connection %v ran into an error: %v", notificationError.ConnectionId, notificationError.Error)
 			notificationErrors = append(notificationErrors, notificationError)
 		}
 	}

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"crazy-8s/global"
+	"crazy-8s/notification"
 	"crazy-8s/service"
 	"crazy-8s/transport"
 	"fmt"
@@ -10,19 +11,24 @@ import (
 
 type Router struct {
 	gameService *service.GameService
+	notifier    notification.Notifier
 }
 
-func NewRouter(gameService *service.GameService) *Router {
+func NewRouter(gameService *service.GameService, notifier notification.Notifier) *Router {
 	return &Router{
 		gameService: gameService,
+		notifier:    notifier,
 	}
 }
 
 func (router *Router) HandleDisconnect(connectionId string) error {
-	_, err := router.gameService.LeaveGame(connectionId)
+	updatedGame, err := router.gameService.LeaveGame(connectionId)
 	if err != nil {
 		return err
 	}
+
+	router.notifier.SendAll(transport.NewGameResponseMap(updatedGame))
+
 	return nil
 }
 
@@ -42,7 +48,15 @@ func (router *Router) handleCreateGame(ctx context.Context, request transport.Re
 	if !ok {
 		return fmt.Errorf("CreateGameRequest is required to create a new game")
 	}
-	_, err := router.gameService.CreateGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
+
+	connectionId := ctx.Value(global.ConnectionIdCtxKey{}).(string)
+
+	createdGame, err := router.gameService.CreateGame(connectionId, gameRequest)
+
+	if notifyErr := router.notifier.Send(connectionId, transport.NewGameResponse(createdGame, connectionId)); notifyErr.Error != nil {
+		return notifyErr.Error
+	}
+
 	return err
 }
 
@@ -51,11 +65,18 @@ func (router *Router) handleJoinGame(ctx context.Context, request transport.Requ
 	if !ok {
 		return fmt.Errorf("JoinGameRequest is required to join an existing game")
 	}
-	_, err := router.gameService.JoinGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
-	return err
+	
+	game, err := router.gameService.JoinGame(ctx.Value(global.ConnectionIdCtxKey{}).(string), gameRequest)
+	if err != nil {
+		return err
+	}
+
+	router.notifier.SendAll(transport.NewGameResponseMap(game))
+
+	return nil
 }
 
-func (router *Router) GameService() *service.GameService {
-	return router.gameService
+func (router *Router) Notifier() notification.Notifier {
+	return router.notifier
 }
 

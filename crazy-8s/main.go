@@ -79,7 +79,7 @@ func handleGamePlay(ctx context.Context, apiGatewayRequest APIGatewayRequest) (A
 	}
 
 	apiGatewayClient := loadApiGatewayClient(awsConfig, apiGatewayRequest.RequestContext.DomainName, apiGatewayRequest.RequestContext.Stage)
-	router.GameService().Notifier().(*notification.ApiGatewayNotifier).SetClient(apiGatewayClient)
+	router.Notifier().(*notification.ApiGatewayNotifier).SetClient(apiGatewayClient)
 
 	if err := router.HandleRequest(ctx, baseRequest.Action, gameRequest); err != nil {
 		return APIGatewayResponse{
@@ -98,11 +98,9 @@ func main() {
 	dynamoDbClient := dynamodb.NewFromConfig(awsConfig)
 	gameRepository := repository.NewGameRepository(dynamoDbClient)
 
-	apiGatewayNotifier := notification.NewApiGatewayNotifier()
+	gameService := service.NewGameService(gameRepository)
 
-	gameService := service.NewGameService(gameRepository, apiGatewayNotifier)
-
-	router = api.NewRouter(gameService)
+	router = api.NewRouter(gameService, notification.NewApiGatewayNotifier())
 
 	lambda.Start(handler)
 }
