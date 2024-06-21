@@ -18,7 +18,7 @@ func CreateDynamoDbContainer(ctx context.Context) (*DynamoDbContainer, error) {
     req := testcontainers.ContainerRequest{
         Image:        "amazon/dynamodb-local",
         ExposedPorts: []string{"8000/tcp"},
-        WaitingFor:   wait.ForLog("Initializing DynamoDB Local").WithStartupTimeout(time.Minute * 1),
+        WaitingFor:   wait.ForLog("Initializing DynamoDB Local").WithStartupTimeout(time.Minute * 2),
     }
 
     container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{

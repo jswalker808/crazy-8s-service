@@ -2,16 +2,22 @@ package service
 
 import (
 	gamePkg "crazy-8s/game"
-	"crazy-8s/repository"
 	"crazy-8s/transport"
 	"log"
 )
 
-type GameService struct {
-	gameRepository *repository.GameRepository
+type GameRepository interface {
+	CreateGame(game *gamePkg.Game) (*gamePkg.Game, error)
+	GetGame(gameId string) (*gamePkg.Game, error)
+	AddPlayer(gameId string, player *gamePkg.Player) error
+	RemovePlayer(connectionId string) (*gamePkg.Game, error)
 }
 
-func NewGameService(gameRepository *repository.GameRepository) *GameService {
+type GameService struct {
+	gameRepository GameRepository
+}
+
+func NewGameService(gameRepository GameRepository) *GameService {
 	return &GameService{
 		gameRepository: gameRepository,
 	}
